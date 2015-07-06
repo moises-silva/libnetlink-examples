@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	addattr_l(&req.n, sizeof(req), IFLA_IFNAME, name, len);
 
 	if (rtnl_talk(&rth, &req.n, 0, 0, NULL, NULL, NULL) < 0) {
-		fprintf(stderr, "failed to talk to netlink!");
+		fprintf(stderr, "failed to talk to netlink!\n");
 		exit(1);
 	}
 

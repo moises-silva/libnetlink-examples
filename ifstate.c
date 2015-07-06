@@ -18,20 +18,27 @@ struct iplink_req {
 int main(int argc, char *argv[])
 {
 	const char *dev = NULL;
+	const char *state = NULL;
 	struct iplink_req req;
 	struct rtnl_handle rth = { .fd = -1 };
 	unsigned int ifindex = 0;
 	int len = 0;
 
-	if (argc < 2) {
-		fprintf(stderr, "usage: rmif <dev>\n");
+	if (argc < 3) {
+		fprintf(stderr, "usage: ifstate <dev> <up|down>\n");
 		exit(1);
 	}
 
 	dev = argv[1];
+	state = argv[2];
 	ifindex = if_nametoindex(dev);
 	if (!ifindex) {
 		fprintf(stderr, "Invalid device %s\n", dev);
+		exit(1);
+	}
+
+	if (strcasecmp(state, "up") && strcasecmp(state, "down")) {
+		fprintf(stderr, "Invalid device state %s\n", state);
 		exit(1);
 	}
 
@@ -49,9 +56,16 @@ int main(int argc, char *argv[])
 	memset(&req, 0, sizeof(req));
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST;
-	req.n.nlmsg_type = RTM_DELLINK;
+	req.n.nlmsg_type = RTM_NEWLINK;
 	req.i.ifi_family = AF_UNSPEC;
+
 	req.i.ifi_index = ifindex;
+	req.i.ifi_change |= IFF_UP;
+	if (!strcasecmp(state, "up")) {
+		req.i.ifi_flags |= IFF_UP;
+	} else {
+		req.i.ifi_flags &= ~IFF_UP;
+	}
 
 	addattr_l(&req.n, sizeof(req), IFLA_IFNAME, dev, len);
 
@@ -62,6 +76,6 @@ int main(int argc, char *argv[])
 
 	rtnl_close(&rth);
 
-	printf("Deleted interface %s\n", dev);
+	printf("interface %s set %s\n", dev, state);
 }
 
