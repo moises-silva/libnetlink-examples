@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <linux/if.h>
+#include <net/if.h>
 #include <libnetlink.h>
 
 struct iplink_req {
@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	uint32_t mode = MACVLAN_MODE_PRIVATE;
 	const char *name = NULL;
 	const char *dev = NULL;
-	struct iplink_req req = { 0 };
+	struct iplink_req req;
 	struct rtnl_handle rth = { .fd = -1 };
 	unsigned int ifindex = 0;
 	int len = 0;
@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	memset(&req, 0, sizeof(req));
 	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_EXCL;
 	req.n.nlmsg_type = RTM_NEWLINK;
